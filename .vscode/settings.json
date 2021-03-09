@@ -1,0 +1,10 @@
+{
+    "C_Cpp.errorSquiggles": "Enabled",
+    "files.associations": {
+        "xlocale": "cpp",
+        "ostream": "cpp",
+        "chrono": "cpp",
+        "iostream": "cpp"
+    },
+    "C_Cpp.intelliSenseEngineFallback": "Enabled"
+}
