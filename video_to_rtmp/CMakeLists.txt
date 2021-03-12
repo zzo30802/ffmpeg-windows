@@ -66,16 +66,18 @@ set(FFMPEG_INCLUDE_DIR ${FFMPEG_ROOT}/include)
 set(FFMPEG_LIBS ${FFMPEG_ROOT}/lib)
 include_directories(${FFMPEG_INCLUDE_DIR})
 link_directories(${FFMPEG_LIBS})
-ADD_LIBRARY(FFMPEG_ALL_LIBS
-	avcodec.lib
-	avdevice.lib
-	avfilter.lib
-	avformat.lib
-	avresample.lib
-	avutil.lib
-	postproc.lib
-	swresample.lib
-	swscale.lib
+message("FFMPEG_INCLUDE_DIR : " ${FFMPEG_INCLUDE_DIR})
+message("FFMPEG_LIBS : " ${FFMPEG_LIBS})
+set (FFMPEG_ALL_LIBS
+	${FFMPEG_LIBS}/avcodec.lib
+	${FFMPEG_LIBS}/avdevice.lib
+	${FFMPEG_LIBS}/avfilter.lib
+	${FFMPEG_LIBS}/avformat.lib
+	${FFMPEG_LIBS}/avutil.lib
+	${FFMPEG_LIBS}/postproc.lib
+	${FFMPEG_LIBS}/swresample.lib
+	${FFMPEG_LIBS}/swscale.lib
+	#${FFMPEG_LIBS}/libx264.lib
 )
 #---------Linux---------
 ELSE()
@@ -104,7 +106,7 @@ add_executable(${PROJECT_NAME} main.cpp ${SRC} ${SRC_COMPONENT} ${SRC_ERRORCODE}
 # link library
 
 IF (WIN32)
-  target_link_libraries(${PROJECT_NAME} opencv_world349.lib libbreakpad.lib libbreakpad_client.lib FFMPEG_ALL_LIBS)
+  target_link_libraries(${PROJECT_NAME} opencv_world349.lib libbreakpad.lib libbreakpad_client.lib ${FFMPEG_ALL_LIBS})
   # libbreakpad.lib libbreakpad_client.lib 
   # boost_system-vc141-mt-x64-1_66.lib libboost_filesystem-vc141-mt-x64-1_66.lib libboost_regex-vc141-mt-x64-1_66.lib
 ELSE()

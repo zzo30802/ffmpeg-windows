@@ -4,7 +4,8 @@
         "xlocale": "cpp",
         "ostream": "cpp",
         "chrono": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "xiosbase": "cpp"
     },
     "C_Cpp.intelliSenseEngineFallback": "Enabled"
 }

@@ -63,7 +63,7 @@ AVStream 用以對應到 AVFormatContext 裡的一個 stream。
 */
 int CreateAVFormatContextInstance(AVFormatContext*& in, const char* format_type, const char* out_url) {
   // Allocate an AVFormatContext for an output format
-  int res = avformat_alloc_output_context2(&in, 0, format_name, out);
+  int res = avformat_alloc_output_context2(&in, 0, format_type, out_url);
   if (!in) {
     return ErrorMesssage(res);
   }
@@ -135,7 +135,7 @@ int Muxing(AVFormatContext*& in, AVFormatContext*& out) {
 
     res = av_interleaved_write_frame(out, &pkt);
     if (res < 0) {
-      return show_error_msg(res);
+      return ErrorMesssage(res);
     }
   }
   return 0;
@@ -144,9 +144,10 @@ int Muxing(AVFormatContext*& in, AVFormatContext*& out) {
 int main() {
   cout << "main start" << endl;
 
-  const char* inUrl = "./video/SampleVideo.flv";          // input file
-  const char* outUrl = "rtmp://127.0.0.1:443/live/home";  // ouput url
-  const char* output_format = "flv";                      // output format
+  const char* inUrl = "../video/SampleVideo.flv";          // input file
+  const char* outUrl = "rtmp://127.0.0.1:1935/live/home";  // ouput url
+  // const char* outUrl = "rtmp://127.0.0.1:443/live/home";
+  const char* output_format = "flv";  // output format
 
 #pragma region Get Information from Input file
   AVFormatContext* input_context = NULL;
@@ -172,5 +173,5 @@ int main() {
 #pragma endregion
 
   cout << "main end" << endl;
-  reutnr 0;
+  return 0;
 }
