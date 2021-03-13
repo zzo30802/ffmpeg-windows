@@ -77,7 +77,6 @@ set (FFMPEG_ALL_LIBS
 	${FFMPEG_LIBS}/postproc.lib
 	${FFMPEG_LIBS}/swresample.lib
 	${FFMPEG_LIBS}/swscale.lib
-	#${FFMPEG_LIBS}/libx264.lib
 )
 #---------Linux---------
 ELSE()
