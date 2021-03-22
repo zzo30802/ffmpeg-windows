@@ -31,19 +31,9 @@
 *.out
 *.app
 
-#others
-video_to_rtmp/build/CMakeCache.txt
-video_to_rtmp/build/cmake_install.cmake
-video_to_rtmp/build/Makefile
-video_to_rtmp/build/CMakeFiles/*
-video_to_rtmp/build/lib/*
-video_to_rtmp/build/bin/*
-video_to_rtmp/build/ALL_BUILD.vcxproj
-video_to_rtmp/build/ALL_BUILD.vcxproj.filters
-video_to_rtmp/build/ZERO_CHECK.vcxproj
-video_to_rtmp/build/ZERO_CHECK.vcxproj.filters
-video_to_rtmp/build/x64
-video_to_rtmp/build/video_to_rtmp.dir
-video_to_rtmp/build/video_to_rtmp.sln
-video_to_rtmp/build/video_to_rtmp.vcxproj
-video_to_rtmp/build/video_to_rtmp.vcxproj.filters
+#other
+video_to_rtmp/build
+!video_to_rtmp/build/*.bat
+
+webcam_to_rtmp/build
+!webcam_to_rtmp/build/*.bat
