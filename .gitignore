@@ -32,8 +32,8 @@
 *.app
 
 #other
-video_to_rtmp\build
-!video_to_rtmp\build\*.bat
+video_to_rtmp/build
+!video_to_rtmp/build/*.bat
 
-webcam_to_rtmp\build
-!webcam_to_rtmp\build\*.bat
+webcam_to_rtmp/build
+!webcam_to_rtmp/build/*.bat

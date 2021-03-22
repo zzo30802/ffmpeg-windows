@@ -17,6 +17,9 @@ extern "C" {
 
 using namespace std;
 
+// nginx-rtmp url
+static const std::string outUrl = "rtmp://127.0.0.1:443/live/home";
+
 int ErrorMesssage(const int &error_num) {
   char buf[1024] = {0};
   // put error code to buf
@@ -191,8 +194,6 @@ void Release(cv::VideoCapture &cam, SwsContext *swsContext, AVFrame *yuv,
     avformat_free_context(avFormatContext);
 }
 
-// nginx-rtmp url
-static const std::string outUrl = "rtmp://127.0.0.1:443/live/home";
 int main() {
   // Register all network protocols
   avformat_network_init();
