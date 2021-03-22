@@ -4,7 +4,9 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "D:\\thirdpartyforwindows\\ffmpeg\\include"
+                "${workspaceFolder}/webcam_to_rtmp/include",
+                "D:\\thirdpartyforwindows\\ffmpeg\\include",
+                "D:\\thirdpartyforwindows\\opencv\\build\\include"
             ],
             "defines": [
                 "_DEBUG",
