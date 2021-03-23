@@ -18,7 +18,7 @@ extern "C" {
 using namespace std;
 
 // nginx-rtmp url
-static const std::string outUrl = "rtmp://127.0.0.1:443/live/home";
+static const std::string outUrl = "rtmp://127.0.0.1:1935/live/home";
 
 int ErrorMesssage(const int &error_num) {
   char buf[1024] = {0};
@@ -31,7 +31,7 @@ int ErrorMesssage(const int &error_num) {
 /*
 if input context is NULL will allocate memory(calls sws_getContext() to get a new context).
 */
-int GetContextStream(SwsContext *context,
+int GetContextStream(SwsContext *&context,
                      int src_img_width, int src_img_height, enum AVPixelFormat src_pixel_format,
                      int dst_img_width, int dst_img_height, enum AVPixelFormat dst_pixel_format,
                      int flags, SwsFilter *src_filter, SwsFilter *dst_filter, const double *param) {
@@ -44,10 +44,11 @@ int GetContextStream(SwsContext *context,
     std::cout << "  ->sws_getCachedContext() failed." << std::endl;
     return -1;
   }
+  return 0;
 }
 
 // reate && Allocate memory to AVCodecContext. release by av_frame_free()
-int InitializeOutputAVFrame(AVFrame *av_frame, const int &img_width, const int &img_height, enum AVPixelFormat pixel_format) {
+int InitializeOutputAVFrame(AVFrame *&av_frame, const int &img_width, const int &img_height, enum AVPixelFormat pixel_format) {
   /*
   Three ways for allocating memory
   https://blog.csdn.net/xionglifei2014/article/details/90693048
@@ -55,24 +56,32 @@ int InitializeOutputAVFrame(AVFrame *av_frame, const int &img_width, const int &
   // AVFrame : This structure describes decoded (raw) audio or video data.
   // allocate AVFrame and set attributes to default value
   av_frame = av_frame_alloc();
+  if (!av_frame) {
+    std::cout << "ERROR: InitializeOutputAVFrame()" << std::endl;
+    std::cout << "  ->av_frame_alloc() failed." << std::endl;
+    return -1;
+  }
   av_frame->format = pixel_format;
   av_frame->width = img_width;
   av_frame->height = img_height;
   av_frame->pts = 0;
   // allocate the new buffer for audio or video data.
-  const int &&ret = av_frame_get_buffer(av_frame, 32);
+  int &&ret = av_frame_get_buffer(av_frame, 0);
   if (ret != 0)
     return ErrorMesssage(ret);
   return 0;
 }
 
 // Create && Allocate memory to AVCodecContext. release by avcodec_free_context()
-int InitializeAVCodecContext(AVCodecContext *avCodecContext, const int &img_width, const int &img_height,
+int InitializeAVCodecContext(AVCodecContext *&avCodecContext, const int &img_width, const int &img_height,
                              const int &fps, enum AVPixelFormat pixel_format) {
   // Find a registered encoder with a matching codec ID.
   AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_H264);
-  if (!codec)
+  if (!codec) {
+    std::cout << "ERROR: InitializeAVCodecContext()" << std::endl;
+    std::cout << "  ->avcodec_find_encoder() failed. Can't find h264 encoder" << std::endl;
     return -1;
+  }
   // Allocate an AVCodecContext and set its fields to default values.
   avCodecContext = avcodec_alloc_context3(codec);
   if (!avCodecContext) {
@@ -97,7 +106,7 @@ int InitializeAVCodecContext(AVCodecContext *avCodecContext, const int &img_widt
   // Open codec context (Two ways can do it.)
   // std::future<int> fuRes = std::async(std::launch::async, avcodec_open2, avCodecContext, nullptr, nullptr);
   // const int &&ret = fuRes.get();
-  const int &&ret = avcodec_open2(avCodecContext, nullptr, nullptr);
+  int &&ret = avcodec_open2(avCodecContext, nullptr, nullptr);
   if (ret != 0) {
     return ErrorMesssage(ret);
   }
@@ -106,28 +115,34 @@ int InitializeAVCodecContext(AVCodecContext *avCodecContext, const int &img_widt
 }
 
 // Allocate an AVFormatContext for an output format.
-int InitializeAVFormatContextAndCreateNewStream(AVFormatContext *avFormatContext, AVCodecContext *avCodecContext, AVStream *av_stream) {
+int InitializeAVFormatContextAndCreateNewStream(AVFormatContext *&avFormatContext, AVCodecContext *&avCodecContext, AVStream *&avStream) {
   int &&ret = avformat_alloc_output_context2(&avFormatContext, nullptr, "flv", outUrl.c_str());
   if (ret != 0) {
     return ErrorMesssage(ret);
   }
   // Add a new stream to a media file.
-  av_stream = avformat_new_stream(avFormatContext, nullptr);
-  if (!av_stream) {
+  avStream = avformat_new_stream(avFormatContext, nullptr);
+  if (!avStream) {
     std::cout << "ERROR: InitializeAVFormatContextAndCreateNewStream()" << std::endl;
     std::cout << "  avformat_new_stream() failed." << std::endl;
     return -1;
   }
-  av_stream->codecpar->codec_tag = 0;
+  avStream->codecpar->codec_tag = 0;
   // Fill the parameters struct based on the values from the supplied codeccontext.
-  avcodec_parameters_from_context(av_stream->codecpar, avCodecContext);
+  if (!avCodecContext) {
+    std::cout << "ERROR: InitializeAVFormatContextAndCreateNewStream()" << std::endl;
+    std::cout << "  -> avCodecContext is NULL." << std::endl;
+    return -1;
+  }
+  avcodec_parameters_from_context(avStream->codecpar, avCodecContext);
   av_dump_format(avFormatContext, 0, outUrl.c_str(), 1);
+  return 0;
 }
 
 //
-int OutputVideoStreamRTMP(cv::VideoCapture &cam, AVFormatContext *avFormatContext,
-                          AVFrame *yuv, SwsContext *swsContext, AVCodecContext *avCodecContext,
-                          AVStream *avStream, cv::Mat &frame) {
+int OutputVideoStreamRTMP(cv::VideoCapture &cam, AVFormatContext *&avFormatContext,
+                          AVFrame *&yuv, SwsContext *&swsContext, AVCodecContext *&avCodecContext,
+                          AVStream *&avStream, cv::Mat &frame) {
   int &&ret = avio_open(&avFormatContext->pb, outUrl.c_str(), AVIO_FLAG_WRITE);
   if (ret != 0)
     return ErrorMesssage(ret);
@@ -176,10 +191,11 @@ int OutputVideoStreamRTMP(cv::VideoCapture &cam, AVFormatContext *avFormatContex
     pack.duration = av_rescale_q(pack.duration, avStream->time_base, avStream->time_base);
     ret = av_interleaved_write_frame(avFormatContext, &pack);
   }
+  return 0;
 }
 
-void Release(cv::VideoCapture &cam, SwsContext *swsContext, AVFrame *yuv,
-             AVCodecContext *avCodecContext, AVStream *avStream, AVFormatContext *avFormatContext) {
+void Release(cv::VideoCapture &cam, SwsContext *&swsContext, AVFrame *&yuv,
+             AVCodecContext *&avCodecContext, AVStream *&avStream, AVFormatContext *&avFormatContext) {
   if (cam.isOpened())
     cam.release();
   if (swsContext) {
@@ -205,7 +221,7 @@ int main() {
   // Context for codec
   AVCodecContext *avCodecContext = nullptr;
   // Video stream
-  AVStream *avStream;
+  AVStream *avStream = nullptr;
   // Format IO context
   AVFormatContext *avFormatContext = nullptr;
 
@@ -217,6 +233,7 @@ int main() {
     std::cout << "Webcam open failed!" << std::endl;
     return -1;
   }
+  std::cout << "XXX 3" << std::endl;
   //==============Get input frame info from camera, and get context via GetContextStream()================
   // cam.set(cv::CAP_PROP_FPS, 30);
   // int fps = cam.get(cv::CAP_PROP_FPS);
@@ -229,13 +246,15 @@ int main() {
                        SWS_FAST_BILINEAR, nullptr, nullptr, nullptr) != 0) {
     return -1;
   }
-
   //==============Allocate memory to AVFrame (yuv)================
   if (InitializeOutputAVFrame(yuv, img_width, img_height, AVPixelFormat::AV_PIX_FMT_YUV420P) != 0) {
     return -1;
   }
   //==============Allocate memory to avCodecContext (yuv)================
   if (InitializeAVCodecContext(avCodecContext, img_width, img_height, fps, AVPixelFormat::AV_PIX_FMT_YUV420P) != 0) {
+    return -1;
+  }
+  if (!avCodecContext) {
     return -1;
   }
   //==============Allocate memory to AVFormatContext (avFormatContext)================
