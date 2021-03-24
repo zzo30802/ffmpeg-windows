@@ -3,9 +3,9 @@ cmake ../ -G "Visual Studio 15 2017" -A x64
 cmake --build . --config Release
 
 ECHO %THIRD_PARTY%
-# opencv
+rem opencv
 COPY  %THIRD_PARTY%\opencv\build\x64\vc15\bin\opencv_world349.dll  %~dp0\bin\Release
-# ffmpeg
+rem ffmpeg
 COPY  %THIRD_PARTY%\ffmpeg\bin\avcodec-58.dll  %~dp0\bin\Release
 COPY  %THIRD_PARTY%\ffmpeg\bin\avdevice-58.dll  %~dp0\bin\Release
 COPY  %THIRD_PARTY%\ffmpeg\bin\avfilter-7.dll  %~dp0\bin\Release
@@ -16,7 +16,7 @@ COPY  %THIRD_PARTY%\ffmpeg\bin\postproc-55.dll  %~dp0\bin\Release
 COPY  %THIRD_PARTY%\ffmpeg\bin\swresample-3.dll  %~dp0\bin\Release
 COPY  %THIRD_PARTY%\ffmpeg\bin\swscale-5.dll  %~dp0\bin\Release
 COPY  %THIRD_PARTY%\ffmpeg\bin\libx264.dll  %~dp0\bin\Release
-# Qt
+rem Qt
 COPY C:\Qt\Qt5_14_2\5.14.2\msvc2017_64\bin\Qt5Cored.dll %~dp0\bin\Release
 COPY C:\Qt\Qt5_14_2\5.14.2\msvc2017_64\bin\Qt5Cored.pdb %~dp0\bin\Release
 COPY C:\Qt\Qt5_14_2\5.14.2\msvc2017_64\bin\Qt5Guid.dll %~dp0\bin\Release
@@ -25,5 +25,6 @@ COPY C:\Qt\Qt5_14_2\5.14.2\msvc2017_64\bin\Qt5Multimediad.dll %~dp0\bin\Release
 COPY C:\Qt\Qt5_14_2\5.14.2\msvc2017_64\bin\Qt5Multimediad.pdb %~dp0\bin\Release
 COPY C:\Qt\Qt5_14_2\5.14.2\msvc2017_64\bin\Qt5Networkd.dll %~dp0\bin\Release
 COPY C:\Qt\Qt5_14_2\5.14.2\msvc2017_64\bin\Qt5Networkd.pdb %~dp0\bin\Release
-#Qt audio
-xcopy C:\Qt\Qt5_14_2\5.14.2\msvc2017_64\plugins\audio %~dp0\bin\Release /E
+rem Qt audio
+mkdir %~dp0\bin\Release\audio
+xcopy C:\Qt\Qt5_14_2\5.14.2\msvc2017_64\plugins\audio %~dp0\bin\Release\audio
