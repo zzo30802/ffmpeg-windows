@@ -6,7 +6,8 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/webcam_to_rtmp/include",
                 "D:\\thirdpartyforwindows\\ffmpeg\\include",
-                "D:\\thirdpartyforwindows\\opencv\\build\\include"
+                "D:\\thirdpartyforwindows\\opencv\\build\\include",
+                "C:\\Qt\\Qt5_14_2\\5.14.2\\msvc2017_64\\include"
             ],
             "defines": [
                 "_DEBUG",
