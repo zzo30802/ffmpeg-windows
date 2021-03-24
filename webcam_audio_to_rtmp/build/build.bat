@@ -26,4 +26,4 @@ COPY C:\Qt\Qt5_14_2\5.14.2\msvc2017_64\bin\Qt5Multimediad.pdb %~dp0\bin\Release
 COPY C:\Qt\Qt5_14_2\5.14.2\msvc2017_64\bin\Qt5Networkd.dll %~dp0\bin\Release
 COPY C:\Qt\Qt5_14_2\5.14.2\msvc2017_64\bin\Qt5Networkd.pdb %~dp0\bin\Release
 #Qt audio
-xcopy C:\Qt\Qt5_14_2\5.14.2\msvc2017_64\plugins\audio %~dp0\bin\Release
+xcopy C:\Qt\Qt5_14_2\5.14.2\msvc2017_64\plugins\audio %~dp0\bin\Release /E

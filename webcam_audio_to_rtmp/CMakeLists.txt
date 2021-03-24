@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(webcam_to_rtmp)
+project(webcam_audio_to_rtmp)
 
 #set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -105,6 +105,14 @@ set (FFMPEG_ALL_LIBS
 	${FFMPEG_LIBS}/swresample.lib
 	${FFMPEG_LIBS}/swscale.lib
 )
+## Qt
+set(QT_ROOT C:/Qt/Qt5_14_2/5.14.2/msvc2017_64)
+set(QT_INCLUDE_DIR ${QT_ROOT}/include)
+set(QT_LIBS ${QT_ROOT}/lib)
+include_directories(${QT_INCLUDE_DIR})
+link_directories(${QT_LIBS})
+message("QT_INCLUDE_DIR : " ${QT_INCLUDE_DIR})
+message("QT_LIBS : " ${QT_LIBS})
 #---------Linux---------
 ELSE()
 ## OpenCV
@@ -125,14 +133,14 @@ aux_source_directory(./src SRC)
 #aux_source_directory(./src/error_code SRC_ERRORCODE)
 
 # output binary
-add_executable(${PROJECT_NAME} main.cpp ${SRC} ${SRC_COMPONENT} ${SRC_ERRORCODE})
+add_executable(${PROJECT_NAME} main.cpp ${SRC})
 # output so
 #add_library( ${PROJECT_NAME} SHARED ${SRC} ${SRC_COMPONENT} ${SRC_ERRORCODE})
 #add_library( ${PROJECT_NAME} STATIC ${SRC} ${SRC_COMPONENT} ${SRC_ERRORCODE})
 # link library
 
 IF (WIN32)
-  target_link_libraries(${PROJECT_NAME} opencv_world349.lib libbreakpad.lib libbreakpad_client.lib ${FFMPEG_ALL_LIBS})
+  target_link_libraries(${PROJECT_NAME} opencv_world349.lib libbreakpad.lib libbreakpad_client.lib ${FFMPEG_ALL_LIBS} Qt5Guid.lib Qt5Cored.lib Qt5Multimediad.lib Qt5Networkd.lib)
   # libbreakpad.lib libbreakpad_client.lib 
   # boost_system-vc141-mt-x64-1_66.lib libboost_filesystem-vc141-mt-x64-1_66.lib libboost_regex-vc141-mt-x64-1_66.lib
 ELSE()

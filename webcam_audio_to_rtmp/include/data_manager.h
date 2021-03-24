@@ -18,7 +18,7 @@ class VideoCaptureFactory : public DataManager {
   virtual void Stop() = 0;
 
  protected:
-  VideoCaptureFactory();
+  VideoCaptureFactory(){};
 };
 
 #endif _DATA_MANAGER_H_

@@ -5,7 +5,9 @@ class CVideoCapture : public VideoCaptureFactory {
   void run() {
     std::cout << "XXX 1" << std::endl;
   }
-  bool Init(int camIndex = 0) {}
+  bool Init(int camIndex = 0) {
+    return true;
+  }
   void Stop() {
   }
 };
