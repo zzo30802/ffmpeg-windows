@@ -37,3 +37,6 @@ video_to_rtmp/build
 
 webcam_to_rtmp/build
 !webcam_to_rtmp/build/*.bat
+
+webcam_audio_to_rtmp/build
+!webcam_audio_to_rtmp/build/*.bat
