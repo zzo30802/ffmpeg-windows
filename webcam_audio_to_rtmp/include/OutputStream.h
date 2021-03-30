@@ -9,10 +9,17 @@ class OutputStream {
   // Singleton
   static OutputStream *Get();
   bool InitOutputAVFormatContext(const char *url);
-  bool AddAVPacketToOutputAVFormatContext();
+  int InitAVCodecContextAndAVStream(const AVCodecContext *av_codec_context);
+  bool OpenOutputURL();
+  bool AddAVStreamToAVFormatContext(Data src_data, const int &av_stream_index);
 
  private:
   static OutputStream *instance;
-  AVFormatContext *output_av_format_context;
+  AVFormatContext *output_av_format_context = nullptr;
+  const AVCodecContext *output_video_av_codec_context = nullptr;
+  const AVCodecContext *output_audio_av_codec_context = nullptr;
+  AVStream *output_video_stream = nullptr;
+  AVStream *output_audio_stream = nullptr;
+  const char *url;
 };
 #endif  // _OUTPUT_FACTORY_H_
