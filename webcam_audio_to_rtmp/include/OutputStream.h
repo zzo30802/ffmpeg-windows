@@ -2,7 +2,6 @@
 #define _OUTPUT_FACTORY_H_
 
 #include "DataManager.h"
-
 class OutputStream {
  public:
   ~OutputStream();  // Release

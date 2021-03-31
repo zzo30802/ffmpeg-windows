@@ -39,7 +39,7 @@ typedef struct VideoStreamingContext {
   AVFrame *yuv = nullptr;
   AVPacket av_pack = {0};
   int index;
-  char *outUrl;
+  // char *outUrl;
 } VideoStreamingContext;
 
 typedef struct AudioStreamingContext {
@@ -47,7 +47,8 @@ typedef struct AudioStreamingContext {
   int sample_rate = 44100;
   int sample_byte = 16;
   int nb_samples = 1024;
-  SwsContext *sws_context = nullptr;
+  long long lastPts = -1;
+  SwrContext *swr_context = nullptr;
   AVFormatContext *format_context = nullptr;
   AVCodec *av_codec = nullptr;
   AVStream *av_stream = nullptr;
@@ -55,7 +56,7 @@ typedef struct AudioStreamingContext {
   AVFrame *pcm = nullptr;
   AVPacket av_pack = {0};
   int index;
-  char *outUrl;
+  // char *outUrl;
 } AudioStreamingContext;
 
 struct Data {
@@ -110,7 +111,7 @@ class DataManager : public QThread {
   // Stop the thread
   virtual void Stop();
 
-  long long GetCurTime();
+  static long long GetCurTime();
 
  protected:
   std::mutex mutex;

@@ -68,4 +68,48 @@ bool OutputStream::AddAVStreamToAVFormatContext(Data src_data, const int& av_str
   }
   AVPacket* pack = (AVPacket*)src_data.data;
   pack->stream_index = av_stream_index;
+  AVRational stime;
+  AVRational dtime;
+
+  if (this->output_video_stream && this->output_video_av_codec_context &&
+      pack->stream_index == this->output_video_stream->index) {
+    stime = this->output_video_av_codec_context->time_base;
+    dtime = this->output_video_stream->time_base;
+  } else if (this->output_audio_stream && this->output_audio_av_codec_context &&
+             pack->stream_index == this->output_audio_stream->index) {
+    stime = this->output_audio_av_codec_context->time_base;
+    dtime = this->output_audio_stream->time_base;
+  } else {
+    std::cout << "Error: OutputStream::AddAVStreamToAVFormatContext()" << std::endl;
+    return false;
+  }
+
+  // upstreaming
+  /*
+  int64_t av_rescale_q(int64_t a, AVRational bq, AVRational cq) av_const;
+  a  : initinal value
+  bq : original time_base
+  cq : The value you want to switch
+  */
+  pack->pts = av_rescale_q(pack->pts, stime, dtime);
+  pack->dts = av_rescale_q(pack->dts, stime, dtime);
+  pack->duration = av_rescale_q(pack->duration, stime, dtime);
+  int ret = av_interleaved_write_frame(this->output_av_format_context, pack);
+  if (ret != 0) {
+    std::cout << "Error: OutputStream::AddAVStreamToAVFormatContext()" << std::endl;
+    std::cout << "  -> av_interleaved_write_frame()" << std::endl;
+    return false;
+  }
+  std::cout << "#" << std::flush;
+  return true;
+}
+
+OutputStream::~OutputStream() {
+  std::cout << "OutputStream instance release start" << std::endl;
+  if (this->output_av_format_context) {
+    avformat_close_input(&this->output_av_format_context);
+    this->output_video_stream = nullptr;
+  }
+  this->output_video_av_codec_context = nullptr;
+  this->url = "";
 }

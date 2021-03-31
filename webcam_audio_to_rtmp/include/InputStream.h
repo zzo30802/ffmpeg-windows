@@ -54,27 +54,14 @@ static int GetCpuNum() {
 #endif
 }
 
-// abstract class
-class InputFacotry {
-  /*
-  process flow :
-  input -> SwsContext -> audio resample/video capture
-  -> AVFrame ->AVPacket -> 
-  */
+class VideoInput {
  public:
-  // SwsContext
-  virtual bool InitSwsContext() = 0;
-  virtual bool InitAndOpenAVCodecContext() = 0;
-  virtual bool InitAndGetAVFrameFromData() = 0;
-};
-
-class VideoInput : public InputFacotry {
- public:
+  static VideoInput *Get(VideoStreamingContext *video_sc);
   VideoInput(VideoStreamingContext *video_sc);
   ~VideoInput();
   VideoInput() = delete;
-  bool InitSwsContext(enum AVPixelFormat src_format, enum AVPixelFormat dst_format);
-  bool InitAndOpenAVCodecContext(enum AVCodecID video_codec, enum AVPixelFormat pixel_format);
+  bool InitContext(enum AVPixelFormat src_format, enum AVPixelFormat dst_format);
+  bool InitAndOpenAVCodecContext(enum AVCodecID video_codec);
   bool InitAndGetAVFrameFromData();
   // according to InitSwsContext passing arguments -> ex: AV_PIX_FMT_BGR24 -> AV_PIX_FMT_YUV420P
   Data ConvertPixelFromat(Data src_data);
@@ -84,17 +71,24 @@ class VideoInput : public InputFacotry {
   int &&dst_video_format = 0;
   VideoStreamingContext *sc;
   bool InitAVCodec(enum AVCodecID video_codec);  // use this codec to transfer AVPacket to ABFrame and output video
-  bool InitAVCodecContext(enum AVPixelFormat pixel_format);
+  bool InitAVCodecContext();
 };
 
-class AudioInput : public InputFacotry {
+class AudioInput {
  public:
+  static AudioInput *Get(AudioStreamingContext *audio_sc);
   AudioInput(AudioStreamingContext *audio_sc);
   ~AudioInput();
   AudioInput() = delete;
-  bool InitSwsContext();
+  bool InitContext(enum AVSampleFormat output_format, enum AVSampleFormat input_format);  // SwrContext
+  bool InitAndOpenAVCodecContext(enum AVCodecID av_codec_id);
+  bool InitAndGetAVFrameFromData();
+  Data Resample(Data src_data);
+  Data EncodeAudio(Data src_data);
 
  private:
+  int &&output_sample_format = 0;
+  int &&input_sample_format = 0;
   AudioStreamingContext *sc;
 };
 
