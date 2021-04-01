@@ -1,4 +1,9 @@
 #include "OutputStream.h"
+OutputStream* OutputStream::instance = nullptr;
+
+OutputStream::OutputStream() {
+  avformat_network_init();
+}
 
 OutputStream* OutputStream::Get() {
   if (instance == nullptr)
@@ -8,7 +13,7 @@ OutputStream* OutputStream::Get() {
 
 bool OutputStream::InitOutputAVFormatContext(const char* url) {
   int ret = avformat_alloc_output_context2(&this->output_av_format_context, nullptr, "flv", url);
-  if (!ret) {
+  if (ret != 0) {
     std::cout << "Error: VideoProcess::InitAVFormatContext()" << std::endl;
     return ErrorMesssage(ret);
   }

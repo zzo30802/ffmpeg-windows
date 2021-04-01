@@ -4,6 +4,7 @@
 #include "DataManager.h"
 class OutputStream {
  public:
+  OutputStream();
   ~OutputStream();  // Release
   // Singleton
   static OutputStream *Get();

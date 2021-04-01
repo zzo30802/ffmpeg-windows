@@ -38,7 +38,7 @@ typedef struct VideoStreamingContext {
   AVCodecContext *av_codec_context = nullptr;
   AVFrame *yuv = nullptr;
   AVPacket av_pack = {0};
-  int index;
+  // int index =0 ;
   // char *outUrl;
 } VideoStreamingContext;
 
@@ -55,55 +55,52 @@ typedef struct AudioStreamingContext {
   AVCodecContext *av_codec_context = nullptr;
   AVFrame *pcm = nullptr;
   AVPacket av_pack = {0};
-  int index;
+  // int index;
   // char *outUrl;
 } AudioStreamingContext;
 
-struct Data {
+// struct Data {
+//  public:
+//   Data(){};
+//   Data(char *data, int size, long long pts = 0) {
+//     this->data = new char[size];
+//     memcpy(this->data, data, size);
+//     this->size = size;
+//     this->pts = pts;  // record the time when storing the data
+//   };
+//   virtual ~Data(){};
+//   void Release() {
+//     if (this->data)
+//       delete this->data;
+//     this->data = 0;
+//     this->size = 0;
+//   }
+//   int size = 0;
+//   long long pts = 0;
+//   char *data = 0;
+// };
+
+class Data {
  public:
   Data();
-  Data(char *data, int size, long long pts = 0) {
-    this->data = new char[size];
-    memcpy(this->data, data, size);
-    this->size = size;
-    this->pts = pts;  // record the time when storing the data
-  };
-  virtual ~Data() {
-    if (this->data)
-      delete this->data;
-  };
-  void Release() {
-    if (this->data)
-      delete this->data;
-  }
-  // int GetSize() const {
-  //   return this->size;
-  // };
-  // int GetPts() const {
-  //   return this->pts;
-  // }
-  // char GetData() const {
-  //   return *(this->data);
-  // }
-  int size;
-  long long pts = 0;
-  char *data;
+  Data(char *data, int size, long long pts = 0);
+  virtual ~Data();
 
-  //  private:
-  // int size;
-  // long long pts = 0;
-  // char *data;
+  void Release();
+  char *data = 0;
+  int size = 0;
+  long long pts = 0;
 };
 
 // camera 和 qt_audio 將擷取到的影像與聲音的資料傳到queue，之後需要封裝成packet時再pop出來
 class DataManager : public QThread {
  public:
   DataManager(){};
-  ~DataManager(){};
+  virtual ~DataManager(){};
   // Get queue size
   int GetQueueSize();
   // Push data to the queue
-  virtual void Push(Data &data);
+  virtual void Push(Data data);
   // Get the front data of queue, and pop it fron the queue
   virtual Data Pop();
   // Start the thread
@@ -115,7 +112,8 @@ class DataManager : public QThread {
 
  protected:
   std::mutex mutex;
-  std::queue<Data> data_queue;
+  // std::queue<Data> data_queue;
+  std::list<Data> data_queue;
   int data_count = 0;
   int max_queue_size = 100;
   bool is_exit = false;

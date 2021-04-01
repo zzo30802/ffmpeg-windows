@@ -13,9 +13,9 @@ VideoInput::VideoInput(VideoStreamingContext *video_sc) {
 bool VideoInput::InitContext(enum AVPixelFormat src_format, enum AVPixelFormat dst_format) {
   // init SwsContext
   this->sc->sws_context = sws_getCachedContext(this->sc->sws_context,
-                                               this->sc->img_width, this->sc->img_height, src_format,
-                                               this->sc->img_width, this->sc->img_height, dst_format,
-                                               SWS_BICUBIC, nullptr, nullptr, nullptr);
+                                               this->sc->img_width, this->sc->img_height, AV_PIX_FMT_BGR24,
+                                               this->sc->img_width, this->sc->img_height, AV_PIX_FMT_YUV420P,
+                                               SWS_BICUBIC, 0, 0, 0);
   this->dst_video_format = dst_format;
 
   if (!this->sc->sws_context) {
@@ -23,6 +23,7 @@ bool VideoInput::InitContext(enum AVPixelFormat src_format, enum AVPixelFormat d
     std::cout << "  ->sws_getCachedContext() failed." << std::endl;
     return false;
   }
+  return true;
 }
 
 bool VideoInput::InitAndOpenAVCodecContext(enum AVCodecID video_codec) {
@@ -44,12 +45,12 @@ bool VideoInput::InitAndOpenAVCodecContext(enum AVCodecID video_codec) {
     avcodec_free_context(&this->sc->av_codec_context);
     return false;
   }
-  return false;
+  return true;
 }
 bool VideoInput::InitAndGetAVFrameFromData() {
   // Init AVFrame
   this->sc->yuv = av_frame_alloc();
-  this->sc->yuv->format = this->dst_video_format;
+  this->sc->yuv->format = AV_PIX_FMT_YUV420P;  //(AVPixelFormat)(this->dst_video_format);
   this->sc->yuv->width = this->sc->img_width;
   this->sc->yuv->height = this->sc->img_height;
   this->sc->yuv->pts = 0;
@@ -64,22 +65,33 @@ bool VideoInput::InitAndGetAVFrameFromData() {
 
 // according to InitSwsContext passing arguments -> ex: AV_PIX_FMT_BGR24 -> AV_PIX_FMT_YUV420P
 Data VideoInput::ConvertPixelFromat(Data src_data) {
+  std::cout << "ConvertPixelFromat 1" << std::endl;
+  std::cout << "src_data.size : " << src_data.size << std::endl;
+  if (!this->sc->sws_context) {
+    std::cout << "QQQQQQQQQQQQQQQQQQQQQQQQQ" << std::endl;
+  }
+  if (!this->sc->yuv) {
+    std::cout << "TTTTTTTTTTTTTTTTTTTTTTTTT" << std::endl;
+  }
   Data tmp;
-  tmp.pts = src_data.pts;  // copy pts
+  tmp.pts = src_data.pts;
+  //Input data
   uint8_t *indata[AV_NUM_DATA_POINTERS] = {0};
-  indata[0] = (uint8_t *)src_data.data;  //****
+  //indata[0] bgrbgrbgr
+  //plane indata[0] bbbbb indata[1]ggggg indata[2]rrrrr
+  indata[0] = (uint8_t *)src_data.data;
   int insize[AV_NUM_DATA_POINTERS] = {0};
 
   insize[0] = this->sc->img_width * this->sc->pixel_size;
+  std::cout << "ConvertPixelFromat 6" << std::endl;
   int h = sws_scale(this->sc->sws_context, indata, insize, 0, this->sc->img_height,
                     this->sc->yuv->data, this->sc->yuv->linesize);
+  std::cout << "ConvertPixelFromat 7" << std::endl;
   if (h <= 0) {
-    std::cout << "Error: VideoInput::ConvertPixelFromat()" << std::endl;
-    std::cout << "  ->sws_scale() : the height of the output slice <= 0." << std::endl;
     return tmp;
   }
   this->sc->yuv->pts = src_data.pts;
-  tmp.data = (char *)(this->sc->yuv);
+  tmp.data = (char *)this->sc->yuv;
   int *p = this->sc->yuv->linesize;
   while ((*p)) {
     tmp.size += (*p) * this->sc->img_height;
@@ -158,7 +170,7 @@ bool VideoInput::InitAVCodecContext() {
   this->sc->av_codec_context->framerate = {this->sc->fps, 1};
   this->sc->av_codec_context->gop_size = 50;
   this->sc->av_codec_context->max_b_frames = 0;
-  this->sc->av_codec_context->pix_fmt = (AVPixelFormat)this->dst_video_format;
+  this->sc->av_codec_context->pix_fmt = AV_PIX_FMT_YUV420P;  //(AVPixelFormat)this->dst_video_format;
   return true;
 }
 
@@ -188,16 +200,16 @@ AudioInput *AudioInput::Get(AudioStreamingContext *audio_sc) {
 }
 
 AudioInput::AudioInput(AudioStreamingContext *audio_sc) {
-  this->sc = audio_sc;
+  this->sc = *audio_sc;
 }
 
 // AV_SAMPLE_FMT_FLTP, AV_SAMPLE_FMT_S16
 bool AudioInput::InitContext(enum AVSampleFormat output_format, enum AVSampleFormat input_format) {
-  this->sc->swr_context = nullptr;
-  this->sc->swr_context = swr_alloc_set_opts(this->sc->swr_context,
-                                             av_get_default_channel_layout(this->sc->channels), output_format, this->sc->sample_rate,  // Output format
-                                             av_get_default_channel_layout(this->sc->channels), input_format, this->sc->sample_rate,
-                                             0, nullptr);
+  this.sc->swr_context = nullptr;
+  this.sc->swr_context = swr_alloc_set_opts(this->sc->swr_context,
+                                            av_get_default_channel_layout(this->sc->channels), output_format, this->sc->sample_rate,  // Output format
+                                            av_get_default_channel_layout(this->sc->channels), input_format, this->sc->sample_rate,
+                                            0, nullptr);
   if (!this->sc->swr_context) {
     std::cout << "Error: AudioInput::InitContext()" << std::endl;
     std::cout << "  -> swr_alloc_set_opts()" << std::endl;
@@ -233,12 +245,21 @@ bool AudioInput::InitAndOpenAVCodecContext(enum AVCodecID av_codec_id) {
   this->sc->av_codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
   this->sc->av_codec_context->thread_count = GetCpuNum();
   this->sc->av_codec_context->time_base = {1, 1000000};
+
+  this->sc->av_codec_context->bit_rate = 40000;
+  this->sc->av_codec_context->sample_rate = this->sc->sample_rate;
+  this->sc->av_codec_context->sample_fmt = (AVSampleFormat)this->output_sample_format;
+  this->sc->av_codec_context->channels = this->sc->channels;
+  this->sc->av_codec_context->channel_layout = av_get_default_channel_layout(this->sc->channels);
+
   // copy AVCodec parameters to AVCodecContext
-  std::future<int> fuRes = std::async(std::launch::async, avcodec_open2, this->sc->av_codec_context, nullptr, nullptr);
-  int ret = fuRes.get();
+  std::future<int> fuRes_ = std::async(std::launch::async, avcodec_open2,
+                                       this->sc->av_codec_context, nullptr, nullptr);
+  int ret = fuRes_.get();
   if (ret != 0) {
     std::cout << "AudioInput::InitAndOpenAVCodecContext()" << std::endl;
     std::cout << "  -> avcodec_open2()" << std::endl;
+    avcodec_free_context(&this->sc->av_codec_context);
     return ErrorMesssage(ret);
   }
   return true;
@@ -270,7 +291,7 @@ Data AudioInput::Resample(Data src_data) {
   const uint8_t *input_data[AV_NUM_DATA_POINTERS] = {0};
   input_data[0] = (uint8_t *)src_data.data;
   int len = swr_convert(this->sc->swr_context, this->sc->pcm->data, this->sc->pcm->nb_samples,
-                        input_data, this->sc->nb_samples);
+                        input_data, this->sc->pcm->nb_samples);
   if (len <= 0) {
     std::cout << "Error: AudioInput::Resample()" << std::endl;
     std::cout << "  -> swr_convert()" << std::endl;

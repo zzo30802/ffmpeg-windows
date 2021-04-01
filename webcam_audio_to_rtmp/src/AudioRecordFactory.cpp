@@ -10,7 +10,7 @@ class AudioRecord : public AudioRecordFactory {
     QAudioFormat fmt;
     fmt.setSampleRate(this->sample_rate);
     fmt.setChannelCount(this->channels);
-    fmt.setSampleSize(this->sample_byte);
+    fmt.setSampleSize(this->sample_byte * 8);
     fmt.setCodec("audio/pcm");
     fmt.setByteOrder(QAudioFormat::LittleEndian);
     fmt.setSampleType(QAudioFormat::UnSignedInt);
@@ -29,6 +29,7 @@ class AudioRecord : public AudioRecordFactory {
   }
 
   void run() {
+    std::cout << "AudioRecord::run() start" << std::endl;
     // read a frame data
     int readSize{this->nb_samples * this->channels * this->sample_byte};
     char *buf = new char[readSize];
@@ -49,6 +50,7 @@ class AudioRecord : public AudioRecordFactory {
         continue;
       Push(Data(buf, readSize, GetCurTime()));
     }
+    std::cout << "AudioRecord::run() end" << std::endl;
     delete buf;
   }
 
@@ -69,7 +71,7 @@ class AudioRecord : public AudioRecordFactory {
   //************************************
 };
 
-AudioRecordFactory *AudioRecordFactory::Get(unsigned char index = 0) {
+AudioRecordFactory *AudioRecordFactory::Get(unsigned char index) {
   static AudioRecord instance[255];
   return &instance[index];
 }

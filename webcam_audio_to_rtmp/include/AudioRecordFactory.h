@@ -17,7 +17,7 @@ class AudioRecordFactory : public DataManager {
   int channels = 2;
   // Sampling rating
   int sample_rate = 44100;
-  int sample_byte = 16;
+  int sample_byte = 2;
   // Number of sampling
   int nb_samples = 1024;
   //*********************************************

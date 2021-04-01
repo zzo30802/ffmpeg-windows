@@ -4,9 +4,30 @@
 // Get() -> Init() -> Start() / run()
 class VideoCapture : public VideoCaptureFactory {
  public:
-  // DataManager中的Start()->QThread::Start()執行
+  void run() {  // start()
+    std::cout << "VideoCapture::run() start" << std::endl;
+    cv::Mat frame;
+    while (!is_exit) {
+      if (!cam.read(frame)) {
+        std::cout << "!cam.read(frame)" << std::endl;
+        QThread::msleep(1);
+        continue;
+      }
+      if (frame.empty()) {
+        std::cout << "!frame.empty()" << std::endl;
+        QThread::msleep(1);
+        continue;
+      }
+      Data data((char *)frame.data, frame.cols * frame.rows * frame.elemSize(), GetCurTime());
+      std::cout << "VideoCapture push 1" << std::endl;
+      Push(data);
+      std::cout << "VideoCapture push 2" << std::endl;
+    }
+    std::cout << "VideoCapture::run() end" << std::endl;
+  }
 
-  bool Init(const int &camIndex = 0) {
+  // DataManager中的Start()->QThread::Start()執行
+  bool Init(int camIndex = 0) {
     std::cout << "VideoCapture::Init() start" << std::endl;
     cam.open(camIndex);
     if (!cam.isOpened()) {
@@ -21,24 +42,6 @@ class VideoCapture : public VideoCaptureFactory {
     if (this->fps == 0) this->fps = 25;
     std::cout << "VideoCapture::Init() end" << std::endl;
     return true;
-  }
-
-  void run() {  // start()
-    std::cout << "VideoCapture::run() start" << std::endl;
-    cv::Mat frame;
-    while (!is_exit) {
-      if (!cam.read(frame)) {
-        QThread::msleep(1);
-        continue;
-      }
-      if (frame.empty()) {
-        QThread::msleep(1);
-        continue;
-      }
-      Data data((char *)frame.data, frame.cols * frame.cols * frame.elemSize(), GetCurTime());
-      Push(data);
-    }
-    std::cout << "VideoCapture::run() end" << std::endl;
   }
 
   void Stop() {
