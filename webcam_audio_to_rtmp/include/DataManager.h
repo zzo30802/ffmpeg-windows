@@ -2,8 +2,6 @@
 #define _DATA_MANAGER_H_
 #include <QtCore/QThread>
 #include <iostream>
-#include <mutex>
-#include <queue>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -18,6 +16,10 @@ extern "C" {
 #pragma comment(lib, "avutil.lib")
 #pragma comment(lib, "swresample.lib")
 
+static long long GetCurTime() {
+  return av_gettime();
+}
+
 static bool ErrorMesssage(const int &error_num) {
   char buf[1024]{0};
   // put error code to buf
@@ -26,96 +28,32 @@ static bool ErrorMesssage(const int &error_num) {
   return false;
 }
 
-typedef struct VideoStreamingContext {
-  int img_width = 1280;
-  int img_height = 720;
-  int pixel_size = 3;
-  int fps = 25;
-  SwsContext *sws_context = nullptr;
-  AVFormatContext *av_format_context = nullptr;
-  AVCodec *av_codec = nullptr;
-  AVStream *av_stream = nullptr;
-  AVCodecContext *av_codec_context = nullptr;
-  AVFrame *yuv = nullptr;
-  AVPacket av_pack = {0};
-  // int index =0 ;
-  // char *outUrl;
-} VideoStreamingContext;
-
-typedef struct AudioStreamingContext {
-  int channels = 2;
-  int sample_rate = 44100;
-  int sample_byte = 16;
-  int nb_samples = 1024;
-  long long lastPts = -1;
-  SwrContext *swr_context = nullptr;
-  AVFormatContext *format_context = nullptr;
-  AVCodec *av_codec = nullptr;
-  AVStream *av_stream = nullptr;
-  AVCodecContext *av_codec_context = nullptr;
-  AVFrame *pcm = nullptr;
-  AVPacket av_pack = {0};
-  // int index;
-  // char *outUrl;
-} AudioStreamingContext;
-
-// struct Data {
-//  public:
-//   Data(){};
-//   Data(char *data, int size, long long pts = 0) {
-//     this->data = new char[size];
-//     memcpy(this->data, data, size);
-//     this->size = size;
-//     this->pts = pts;  // record the time when storing the data
-//   };
-//   virtual ~Data(){};
-//   void Release() {
-//     if (this->data)
-//       delete this->data;
-//     this->data = 0;
-//     this->size = 0;
-//   }
-//   int size = 0;
-//   long long pts = 0;
-//   char *data = 0;
-// };
-
 class Data {
  public:
-  Data();
-  Data(char *data, int size, long long pts = 0);
-  virtual ~Data();
-
+  Data(){};
+  Data(char *src_data, int size, long long pts = 0);
+  virtual ~Data(){};
   void Release();
   char *data = 0;
   int size = 0;
   long long pts = 0;
 };
 
-// camera 和 qt_audio 將擷取到的影像與聲音的資料傳到queue，之後需要封裝成packet時再pop出來
+// To store data from a web camera or microphone
 class DataManager : public QThread {
  public:
   DataManager(){};
   virtual ~DataManager(){};
-  // Get queue size
-  int GetQueueSize();
-  // Push data to the queue
-  virtual void Push(Data data);
-  // Get the front data of queue, and pop it fron the queue
+  virtual void Push(Data src_data);
   virtual Data Pop();
-  // Start the thread
   virtual void Start();
-  // Stop the thread
   virtual void Stop();
-
-  static long long GetCurTime();
 
  protected:
   std::mutex mutex;
-  // std::queue<Data> data_queue;
-  std::list<Data> data_queue;
-  int data_count = 0;
   int max_queue_size = 100;
+  // int data_count = 0;
+  std::list<Data> data_queue;
   bool is_exit = false;
 };
 

@@ -1,42 +1,53 @@
 #include "DataManager.h"
 
-Data::Data() {}
-Data::~Data() {}
-Data::Data(char* data, int size, long long pts) {
-  this->data = new char[size];
-  memcpy(this->data, data, size);
+#include <iostream>
+extern "C" {
+#include <libavformat/avformat.h>
+#include <libavutil/time.h>
+}
+
+// bool ErrorMesssage(const int &error_num) {
+//   char buf[1024]{0};
+//   // put error code to buf
+//   av_strerror(error_num, buf, sizeof(buf));
+//   std::cout << buf << std::endl;
+//   return false;
+// }
+
+//*********Data*********
+Data::Data(char *src_data, int size, long long pts) {
+  this->data = new char[size];  // new an array of char
+  memcpy(this->data, src_data, size);
   this->size = size;
   this->pts = pts;
 }
 void Data::Release() {
-  if (data)
-    delete data;
+  if (this->data)
+    delete this->data;
   data = 0;
   size = 0;
 }
 
-void DataManager::Push(Data data) {
+//*********DataManager*********
+void DataManager::Push(Data src_data) {
   std::lock_guard<std::mutex> lock(mutex);
   if (data_queue.size() > max_queue_size) {
     data_queue.front().Release();
     data_queue.pop_front();
   }
-  // 加入新資料
-  data_queue.push_back(data);
-  // std::cout << "queue size : " << data_queue.size() << std::endl;
-  // std::cout << data.size << std::endl;
+  data_queue.emplace_back(src_data);
 }
 
 Data DataManager::Pop() {
   std::lock_guard<std::mutex> lock(mutex);
-  if (data_queue.empty()) {
-    return Data();  // 回傳空Data
-  }
+  if (data_queue.empty())
+    return Data();
   Data data = data_queue.front();
   data_queue.pop_front();
   return data;
 }
 
+// include QThread::start()
 void DataManager::Start() {
   is_exit = false;
   QThread::start();
@@ -44,9 +55,6 @@ void DataManager::Start() {
 
 void DataManager::Stop() {
   is_exit = true;
+  // Waiting for the thread to finish and then process the following code
   QThread::wait();
-}
-
-long long DataManager::GetCurTime() {
-  return av_gettime();
 }

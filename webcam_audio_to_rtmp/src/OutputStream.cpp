@@ -1,27 +1,42 @@
 #include "OutputStream.h"
-OutputStream* OutputStream::instance = nullptr;
+
+#include <iostream>
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libswresample/swresample.h>
+#include <libswscale/swscale.h>
+}
+// #pragma comment(lib, "swscale.lib")
+// #pragma comment(lib, "avcodec.lib")
+// #pragma comment(lib, "avutil.lib")
+// #pragma comment(lib, "swresample.lib")
+
+OutputStream* OutputStream::o_instance = nullptr;
 
 OutputStream::OutputStream() {
   avformat_network_init();
 }
 
 OutputStream* OutputStream::Get() {
-  if (instance == nullptr)
-    instance = new OutputStream();
-  return instance;
+  if (o_instance == nullptr)
+    o_instance = new OutputStream();
+  return o_instance;
 }
 
 bool OutputStream::InitOutputAVFormatContext(const char* url) {
-  int ret = avformat_alloc_output_context2(&this->output_av_format_context, nullptr, "flv", url);
+  int ret = avformat_alloc_output_context2(&this->output_av_format_context, 0, "flv", url);
+  this->url = url;
   if (ret != 0) {
     std::cout << "Error: VideoProcess::InitAVFormatContext()" << std::endl;
     return ErrorMesssage(ret);
   }
-  this->url = url;
+  // this->url = url;
   return true;
 }
 
 // if fail will return -1
+
 int OutputStream::InitAVCodecContextAndAVStream(const AVCodecContext* av_codec_context) {
   if (!av_codec_context)
     return -1;
@@ -98,8 +113,12 @@ bool OutputStream::AddAVStreamToAVFormatContext(Data src_data, const int& av_str
   */
   pack->pts = av_rescale_q(pack->pts, stime, dtime);
   pack->dts = av_rescale_q(pack->dts, stime, dtime);
+  // std::cout << "pack->pts : " << pack->pts << std::endl;
+  // std::cout << "pack->dts : " << pack->dts << std::endl;
   pack->duration = av_rescale_q(pack->duration, stime, dtime);
+
   int ret = av_interleaved_write_frame(this->output_av_format_context, pack);
+
   if (ret != 0) {
     std::cout << "Error: OutputStream::AddAVStreamToAVFormatContext()" << std::endl;
     std::cout << "  -> av_interleaved_write_frame()" << std::endl;

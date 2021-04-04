@@ -2,6 +2,9 @@
 #define _OUTPUT_FACTORY_H_
 
 #include "DataManager.h"
+
+// class AVCodecContext;
+
 class OutputStream {
  public:
   OutputStream();
@@ -14,7 +17,7 @@ class OutputStream {
   bool AddAVStreamToAVFormatContext(Data src_data, const int &av_stream_index);
 
  private:
-  static OutputStream *instance;
+  static OutputStream *o_instance;
   AVFormatContext *output_av_format_context = nullptr;
   const AVCodecContext *output_video_av_codec_context = nullptr;
   const AVCodecContext *output_audio_av_codec_context = nullptr;
@@ -22,4 +25,5 @@ class OutputStream {
   AVStream *output_audio_stream = nullptr;
   const char *url;
 };
+
 #endif  // _OUTPUT_FACTORY_H_
